@@ -1,0 +1,113 @@
+SPRING BOOT SECURITY
+
+CHAPTER 1
+
+{{IMAGE 1}}
+
+The first thing that gets executed within a spring boot application is the filter. So whenever or anytime you create a filter in your spring boot application it is the first thing that runs. e.g When a client makes a request, our JwtAuthFilter runs and performs the operations it needs to in order to authenticate that client.
+
+{{IMAGE 2}}
+
+The `JwtAuthFilter` checks every incoming request to see if it has it's authentication token. If the client request doesn't have it then our `JwtAuthFilter` returns a 403 response (Missing JWT - User does not exist)
+
+If the client request has a JWT token (or Bearer {token}), then our filter would extract the subject or claim (it could be the username, email, or something similar) from the JWT Token
+
+We would now use the subject or the claim (e.g email, usersname etc) and fetch the users information from the database using the `UserDetailsService`. Now when the user is found the service returns it back to our JwtAuthFilter and then we start our STEP 2: Validation process.
+
+Note: If the user wasn't found even after getting the claim from the jwt token we return a 403 (Missing JWT - User does not exist) response to the client
+
+
+STEP 2
+
+{{Image 3}}
+
+Now the Validation process takes the JWT Token and it uses a `JwtService` to validate the token to that specific user
+
+Now if the token is not for that specific user or the token has expired - The validation process returns an "Invalid JWT token" response to the client
+
+If the token is valid for the specific user we proceed to STEP 3: Update the Security Context Holder
+
+STEP 3
+
+{{Image 4}}
+
+We now update our Security Context Holder and set the newly connected user (thanks to having fetched the user previously using our `UserDetailsService`). In here we make it known across our application (Across our filter chain) that the particular user is now authenticated and then we update the Authentication Manaager so whenever we check if a user is authenticated the answer will be yes. Now once the Security Context Holder is updated, it automatically dispatches the user request to the STEP 4: DispatcherServlet
+
+STEP 4:
+The DispatcherServlet then hands the clients request over to the controller (which does what it needs to do e.g using a Service to perform CRUD operations on the data and maybe performing some business logic) and then sends back a successful response to the client
+
+
+CHAPTER 2
+
+Go over to https://start.spring.io/ - which is a platform where we can easily create a new spring project by picking our preffered options, adding project dependencies and clicking GENERATE
+
+{{Image 5}}
+
+Go ahead and do so using the above image and once done Click GENERATE to download our spring boot starter project which should be in zip format, if so unzip it open the folder up on Intellij
+
+{{6}}
+
+SETTING UP POSTGRESQL USING DOCKER
+
+We will be setting up our Postgresql database using docker. Firstly download docker desktop if you don't already have it at https://www.docker.com/products/docker-desktop/ . Once it is downloaded install and run it
+
+{{7}}
+
+Open intellij back up and create a docker-compose.yaml file in the root directory of your project as shown below. Open up the docker-compose.yaml file and this is where we will create our postgres db
+
+{{8}}
+
+Add the following code below which helps us create a postgres database with docker
+
+{{9}}
+
+Next we want to run this docker-compose.yml file so it can create our postgres database. To do so open up your terminal in intellij and run "docker compose up"
+
+{{10}}
+
+This code should now generate our postgres database on docker.
+
+Next we want to create a new database on our postgres running on docker. Open a new terminal and enter the commands
+
+{{11}}
+
+DATASOURCE CONFIGURATION
+
+We want to now connect to our `jwt_security` database. To do so we will be adding our datasource configuration in the application.yml file inside our 📁src > 📁resources folder
+
+Also rename the application.properties to application.yml and then add the below connection configuration
+
+{{12}}
+
+SETUP PROJECT STRUCTUE SDK
+
+Go ahead and click on the menu > file > project structure and then lets add the below configuration and cick Apply
+
+{{13}}
+
+Note: If you don't have corretto-17 SDK you can download it by clicking on the dropdown > Add SDK > Download JDK and then pick corretto-17 for download
+
+Lastly if we open our SecurityApplication.java file inside src > main > com > danielchukwu > security. We should see the Setup SDK button go ahead and click it and then add our corretto-17 SDK
+
+{{14}}
+
+
+IMPLEMENTING THE USER MODEL
+
+Create a User.java class inside a user package and then start implementing our User Model. Firstly we want to add the below fields to the class
+
+{{15}} 
+
+Next we need to add constructors, getters and setters, equals and hashcode functions, toString functions. Now Instead of writing the code for all this manually one of the dependencies we added we used spring initializr was Lombok. Lombok helps us reduce boilerplate code and in this case it can help us add all those functions that we need. So add the below Lombok anotations
+
+{{16}}
+
+Next specify the id column for the table to be created with this `User` model. 
+
+{{17}}
+
+And then run the app to see a confirmation on the terminal that the table _user was actually created
+
+{{18}}
+{{19}}
+
